@@ -18,15 +18,16 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const pages = [
-  { name: 'Home', path: '/home' },
-  { name: 'Manage Rooms', path: '/assign' },
+  { name: 'Home', path: '/home', role: 'USER' },
+  { name: 'Manage Rooms', path: '/manage', role: 'ADMIN' },
+  { name: 'Audit', path: '/audit', role: 'ADMIN' },
 ];
 
 const ResponsiveAppBar = () => {
   const history = useNavigate();
   const location = useLocation();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const isAuthenticated = getItemFromLocalStorage('user');
+  const loginUser = getItemFromLocalStorage('user');
 
   React.useEffect(() => {}, []);
 
@@ -45,6 +46,16 @@ const ResponsiveAppBar = () => {
   const handleLogout = () => {
     setItemToLocalStorage('user', '');
     history('/login');
+  };
+
+  const checkRole = (page) => {
+    if (page.role === 'ADMIN' && loginUser?.userRole.role === 'ADMIN') {
+      return true;
+    }
+    if (page.role === 'USER') {
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -90,7 +101,7 @@ const ResponsiveAppBar = () => {
               }}
             >
               {pages.map((page) =>
-                isAuthenticated ? (
+                checkRole(page) ? (
                   <MenuItem
                     key={page.name}
                     onClick={() => handlePath(page.path)}
@@ -113,7 +124,7 @@ const ResponsiveAppBar = () => {
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) =>
-              isAuthenticated ? (
+              checkRole(page) ? (
                 <Button
                   key={page.name}
                   variant="menu"
@@ -134,7 +145,7 @@ const ResponsiveAppBar = () => {
             sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
             style={{ fontSize: '1rem' }}
           >
-            {isAuthenticated ? 'Hello, ' + isAuthenticated.name : ''}
+            {loginUser ? 'Hello, ' + loginUser.name : ''}
           </Typography>
           <Box sx={{ flexGrow: 0 }}>
             <Button
@@ -145,7 +156,7 @@ const ResponsiveAppBar = () => {
               endIcon={<ExitToAppIcon />}
             >
               <Typography sx={{ display: { xs: 'none', sm: 'block' } }}>
-                {isAuthenticated ? 'Logout ' : ''}
+                {loginUser ? 'Logout ' : ''}
               </Typography>
             </Button>
           </Box>

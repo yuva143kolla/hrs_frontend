@@ -43,6 +43,16 @@ const getAllAssignedRooms = async (filters) => {
   return data;
 };
 
+const getManagedRooms = async (filters) => {
+  const { data } = await httpService.post('/room/managed', filters);
+  return data;
+};
+
+const getAuditDetails = async (filters) => {
+  const { data } = await httpService.post('/room/audit', filters);
+  return data;
+};
+
 const getRoomsByLocationIds = async (locations) => {
   const { data } = await httpService.get(`/room/location/${locations}`);
   return data;
@@ -65,6 +75,8 @@ export default {
   getRoomStatus,
   getAllProviders,
   getAllAssignedRooms,
+  getManagedRooms,
   assignProviderToRoom,
   getAvilableProviders,
+  getAuditDetails,
 };

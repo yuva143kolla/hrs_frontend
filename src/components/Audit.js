@@ -1,137 +1,40 @@
-import {
-  Box,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Grid,
-  Typography,
-} from '@mui/material';
+import { Button, Grid, Typography } from '@mui/material';
 import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import DatePicker from '@mui/lab/DatePicker';
-import Data from './Data';
 import useWindowDimensions from './common/useWindowDimensions';
 import Spinner from './common/DefaultSpinner';
-import AssignProviderDialog from './AssignProviderDialog';
 import helpService from '../services/helpService';
 import MultiselectDropDown from './common/MultiSelectDropDown';
-import { getItemFromLocalStorage } from '../services/storageService';
+import AuditData from './AuditData';
 
-const d_weeks = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const d_sessions = ['AM', 'Afternoon', 'Evening'];
-
-function Home() {
+function Audit() {
   const [dLocations, setDLocations] = useState([]);
   const [dRooms, setDRooms] = useState([]);
-  const [dRoomStatus, setDRoomStatus] = useState([]);
-  const [dRoomTypes, setDRoomTypes] = useState([]);
-  const [dProviders, setDProviders] = useState([]);
 
   const [filters, setFilters] = useState({
-    showByDay: false,
     startDate: null,
     endDate: null,
-    weeks: [],
-    sessions: [],
-    roomStatus: [],
-    roomTypes: [],
     locations: [],
     rooms: [],
-    providers: [],
   });
 
-  const [showByDay, setShowByDay] = useState(false);
   const [sDate, setSDate] = useState(null);
   const [eDate, setEDate] = useState(null);
-  const [weeks, setWeeks] = useState([]);
-  const [sessions, setSessions] = useState([]);
   const [locations, setLocations] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [roomStatus, setRoomStatus] = useState([]);
-  const [roomTypes, setRoomTypes] = useState([]);
-  const [providers, setProviders] = useState([]);
   const [filterData, setFilterData] = useState([]);
   const [loadData, setLoadData] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [assignRow, setAssignRow] = useState();
-  const [avilProviders, setAvilProviders] = useState([]);
   const [optLoading, setOptLoading] = useState(false);
-  const [openTime, setOpenTime] = useState(new Date());
-
-  const loginUser = getItemFromLocalStorage('user');
 
   const { height } = useWindowDimensions();
   const divHeight = height - 175;
 
   React.useEffect(() => {
     handleSubmit();
-    loadDropdownData();
   }, []);
-
-  const loadDropdownData = async () => {
-    setLoadData(false);
-    const types = await helpService.getRoomTypes();
-    setDRoomTypes(types);
-
-    const status = await helpService.getRoomStatus();
-    setDRoomStatus(status);
-
-    const providers = await helpService.getAllProviders();
-    setDProviders(providers);
-    setLoadData(true);
-  };
-
-  const handleWeeks = (e) => {
-    const { id, checked } = e.target;
-    if (checked) {
-      setWeeks([...weeks, id]);
-    } else {
-      setWeeks(weeks.filter((item) => item !== id));
-    }
-  };
-
-  const handleSession = (e) => {
-    const { id, checked } = e.target;
-    if (checked) {
-      setSessions([...sessions, id]);
-    } else {
-      setSessions(sessions.filter((item) => item !== id));
-    }
-  };
-
-  const handleShowByDay = async (event) => {
-    await setShowByDay(event.target.checked);
-    const filterObj = {
-      showByDay: event.target.checked,
-      startDate: sDate,
-      endDate: eDate,
-      weeks: weeks,
-      sessions: sessions,
-      roomStatus: roomStatus,
-      roomTypes: roomTypes,
-      locations: locations,
-      rooms: rooms,
-      providers: providers,
-    };
-    await setFilters(filterObj);
-    await setLoadData(false);
-    const assignedRooms = await helpService.getAllAssignedRooms(filterObj);
-
-    const data = await addDynamicId(assignedRooms);
-    setFilterData(data);
-    setLoadData(true);
-  };
-
-  const handleRoomStatus = (values) => {
-    setRoomStatus(values);
-  };
-
-  const handleRoomTypes = (values) => {
-    setRoomTypes(values);
-  };
 
   const handleLocation = async (values) => {
     await setLocations(values);
@@ -144,7 +47,6 @@ function Home() {
     }
     const filterRooms = [];
     const allRooms = [];
-    console.log(' dLocations- ' + JSON.stringify(dLocations));
     dLocations.forEach((location) => {
       if (values.includes(location.value) && location.rooms.length > 0) {
         location.rooms.forEach((a) => {
@@ -187,30 +89,18 @@ function Home() {
     }
   };
 
-  const handleByPrevent = () => {};
-
-  const handleProviders = (values) => {
-    setProviders(values);
-  };
-
   const handleSubmit = async () => {
     const filterObj = {
-      showByDay: showByDay,
       startDate: sDate,
       endDate: eDate,
-      weeks: weeks,
-      sessions: sessions,
-      roomStatus: roomStatus,
-      roomTypes: roomTypes,
       locations: locations,
       rooms: rooms,
-      providers: providers,
     };
     await setFilters(filterObj);
     await setLoadData(false);
-    const assignedRooms = await helpService.getAllAssignedRooms(filterObj);
+    const auditDetails = await helpService.getAuditDetails(filterObj);
 
-    const data = await addDynamicId(assignedRooms);
+    const data = await addDynamicId(auditDetails);
     setFilterData(data);
     setLoadData(true);
   };
@@ -229,35 +119,6 @@ function Home() {
     return [];
   }
 
-  const openAssignProvider = async (row) => {
-    setOpenTime(new Date());
-    await getAvilableProviders(row);
-    setAssignRow(row);
-    setOpen(true);
-  };
-
-  const getAvilableProviders = async (assignRow) => {
-    if (assignRow) {
-      console.log('aa' + JSON.stringify(assignRow));
-      const data = await helpService.getAvilableProviders(assignRow);
-      setAvilProviders(data);
-    }
-  };
-
-  const assignProvider = async (provider, assignedRoom) => {
-    assignedRoom.prevProvider = assignedRoom.provider;
-    assignedRoom.userId = loginUser?.id;
-    assignedRoom.providerId = provider;
-    await helpService.assignProviderToRoom(assignedRoom);
-    setOpen(false);
-    setLoadData(false);
-    handleSubmit();
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
   return (
     <div style={{ margin: '0px 30px 10px 50px' }}>
       <Grid container spacing={2}>
@@ -271,20 +132,7 @@ function Home() {
           className="page-header"
           textAlign="center"
         >
-          <Typography variant="h7">Room Availability</Typography>
-
-          <span
-            style={{ float: 'right', fontWeight: 400, fontSize: '12px' }}
-            className="header-checkbox"
-          >
-            <FormControlLabel
-              style={{ fontSize: '1.2rem !important' }}
-              control={<Checkbox id="daywise" />}
-              label="Show By Day"
-              checked={showByDay}
-              onClick={handleShowByDay}
-            />
-          </span>
+          <Typography variant="h7">Audit Details</Typography>
         </Grid>
         <Grid item xs={12} md={12} lg={12} mt={2}>
           <Grid container spacing={3}>
@@ -350,56 +198,6 @@ function Home() {
                       </LocalizationProvider>
                     </Grid>
                     <Grid item xs={12}>
-                      <Typography variant="h7">Week:</Typography>
-                      <Box style={{ paddingLeft: '5px' }}>
-                        <FormGroup row>
-                          {d_weeks.map((week) => (
-                            <FormControlLabel
-                              control={<Checkbox id={week} />}
-                              label={week}
-                              onClick={handleWeeks}
-                              checked={weeks.some((item) => item === week)}
-                            />
-                          ))}
-                        </FormGroup>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Typography variant="h7">Session:</Typography>
-                      <Box style={{ paddingLeft: '5px' }}>
-                        <FormGroup row>
-                          {d_sessions.map((session) => (
-                            <FormControlLabel
-                              control={<Checkbox id={session} />}
-                              label={session}
-                              onClick={handleSession}
-                              checked={sessions.some(
-                                (item) => item === session
-                              )}
-                            />
-                          ))}
-                        </FormGroup>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <MultiselectDropDown
-                        label="Room Status"
-                        items={dRoomStatus}
-                        selectedOpts={roomStatus}
-                        handleSelection={handleRoomStatus}
-                        handleOpenSelect={handleByPrevent}
-                      ></MultiselectDropDown>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <MultiselectDropDown
-                        label="Room Type"
-                        items={dRoomTypes}
-                        selectedOpts={roomTypes}
-                        handleSelection={handleRoomTypes}
-                        handleOpenSelect={handleByPrevent}
-                      ></MultiselectDropDown>
-                    </Grid>
-                    <Grid item xs={12}>
                       <MultiselectDropDown
                         label="Location"
                         items={dLocations}
@@ -416,15 +214,6 @@ function Home() {
                         selectedOpts={rooms}
                         handleSelection={handleRooms}
                         handleOpenSelect={handleOpenRooms}
-                      ></MultiselectDropDown>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <MultiselectDropDown
-                        label="Providers"
-                        items={dProviders}
-                        selectedOpts={providers}
-                        handleSelection={handleProviders}
-                        handleOpenSelect={handleByPrevent}
                       ></MultiselectDropDown>
                     </Grid>
                   </Grid>
@@ -460,21 +249,10 @@ function Home() {
               <Grid container spacing={0} style={{ height: '100%' }}>
                 <Grid item xs={12}>
                   {loadData ? (
-                    <Data
-                      data={filterData}
-                      openAssignProvider={openAssignProvider}
-                    ></Data>
+                    <AuditData data={filterData}></AuditData>
                   ) : (
                     <Spinner></Spinner>
                   )}
-                  <AssignProviderDialog
-                    open={open}
-                    handleClose={handleClose}
-                    onAssign={assignProvider}
-                    assignRow={assignRow}
-                    items={avilProviders}
-                    openTime={openTime}
-                  ></AssignProviderDialog>
                 </Grid>
               </Grid>
             </Grid>
@@ -485,4 +263,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Audit;

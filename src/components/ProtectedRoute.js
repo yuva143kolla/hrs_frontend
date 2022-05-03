@@ -3,13 +3,24 @@ import { Navigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { getItemFromLocalStorage } from '../services/storageService';
 
-const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = getItemFromLocalStorage('user');
+const checkRole = (role, loginUser) => {
+  if (role === 'ADMIN' && loginUser?.userRole.role === 'ADMIN') {
+    return true;
+  }
+  if (role === 'USER') {
+    return true;
+  }
+  return false;
+};
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+const ProtectedRoute = ({ role, children }) => {
+  const loginUser = getItemFromLocalStorage('user');
+
+  const isValid = checkRole(role, loginUser);
+  return isValid ? children : <Navigate to="/login" />;
 };
 ProtectedRoute.propTypes = {
   children: PropTypes.any,
-  path: PropTypes.string,
+  role: PropTypes.string,
 };
 export default ProtectedRoute;

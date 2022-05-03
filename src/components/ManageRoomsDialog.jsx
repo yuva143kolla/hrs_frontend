@@ -12,22 +12,19 @@ import { PropTypes } from 'prop-types';
 import Select from 'react-select';
 import { GridCloseIcon } from '@mui/x-data-grid';
 
-const AssignProviderDialog = (props) => {
-  const { items, open, onAssign, handleClose, assignRow, openTime } = props;
+const ManageRoomsDialog = (props) => {
+  const { items, open, onManage, handleClose, manageRow } = props;
   const [value, setValue] = useState();
   const [selectedValue, setSelectedValue] = useState(0);
-  const [disabled, setDisabled] = useState(false);
 
   React.useEffect(() => {
-    setDisabled(false);
-    setSelectedValue(0);
     setSelectedValueToProvider();
-  }, [openTime, items, assignRow]);
+  }, [items, manageRow]);
 
   const setSelectedValueToProvider = async () => {
-    if (assignRow) {
-      setValue(assignRow.providerId);
-      const val = items.find((item) => item.value === assignRow?.providerId);
+    if (manageRow) {
+      setValue(manageRow.roomTypeId);
+      const val = items.find((item) => item.value === manageRow?.roomTypeId);
       await setSelectedValue(val);
     }
   };
@@ -39,16 +36,11 @@ const AssignProviderDialog = (props) => {
     setSelectedValue(val);
   };
 
-  const handleRemove = () => {
-    setDisabled(true);
-    onAssign(0, assignRow);
-  };
-
   return (
     <div>
       <Dialog open={open} onClose={handleClose} maxWidth={'md'}>
         <DialogTitle id="alert-dialog-title" className="dialogTitle">
-          Assign Provider
+          Manage Room
           <IconButton onClick={handleClose}>
             <GridCloseIcon />
           </IconButton>
@@ -58,9 +50,8 @@ const AssignProviderDialog = (props) => {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <b>
-                  Room Name: {assignRow?.roomName} &nbsp;Date:&nbsp;
-                  {assignRow?.startDateStr}&nbsp; Session:&nbsp;
-                  {assignRow?.session}
+                  Room Name: {manageRow?.roomName} &nbsp;Date:&nbsp;
+                  {manageRow?.startDate}
                 </b>
               </Grid>
               <Grid item xs={12}>
@@ -79,29 +70,12 @@ const AssignProviderDialog = (props) => {
                 <Button
                   className="openRoom"
                   variant="action-button"
-                  onClick={() => {
-                    setDisabled(true);
-                    onAssign(value, assignRow);
-                  }}
+                  onClick={() => onManage(value, manageRow)}
                   style={{ marginLeft: '5px' }}
-                  disabled={disabled || value === assignRow?.providerId}
+                  disabled={value === manageRow?.roomTypeId}
                 >
-                  Assign
+                  Update
                 </Button>
-
-                {assignRow?.provider ? (
-                  <Button
-                    className="bookedRoom"
-                    variant="action-button"
-                    onClick={handleRemove}
-                    disabled={disabled}
-                    style={{ marginLeft: '5px' }}
-                  >
-                    Remove
-                  </Button>
-                ) : (
-                  ''
-                )}
               </Grid>
             </Grid>
           </DialogContentText>
@@ -111,13 +85,12 @@ const AssignProviderDialog = (props) => {
   );
 };
 
-AssignProviderDialog.propTypes = {
+ManageRoomsDialog.propTypes = {
   items: PropTypes.any,
   open: PropTypes.bool,
   handleClose: PropTypes.func,
-  onAssign: PropTypes.func,
-  assignRow: PropTypes.any,
-  openTime: PropTypes.any,
+  onManage: PropTypes.func,
+  manageRow: PropTypes.any,
 };
 
-export default AssignProviderDialog;
+export default ManageRoomsDialog;
