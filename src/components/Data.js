@@ -16,15 +16,15 @@ export default function Data(props) {
   }, [data]);
 
   const columns = [
-    { field: 'roomName', headerName: 'Room', minWidth: 100, flex: 1 },
-    { field: 'roomType', headerName: 'Room Type', minWidth: 100, flex: 1 },
-    { field: 'status', headerName: 'Status', width: 100 },
     {
       field: 'location',
       headerName: 'Location',
       minWidth: 100,
       flex: 1,
     },
+    { field: 'roomName', headerName: 'Room', minWidth: 100, flex: 1 },
+    { field: 'roomType', headerName: 'Room Type', minWidth: 100, flex: 1 },
+    { field: 'status', headerName: 'Status', width: 100 },
     {
       field: 'startDateStr',
       headerName: 'Start Date',
